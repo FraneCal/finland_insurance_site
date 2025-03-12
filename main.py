@@ -16,9 +16,6 @@ chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument("--headless") 
 chrome_options.add_argument("--no-sandbox") 
 chrome_options.add_argument("--disable-dev-shm-usage") 
-# chrome_options.add_argument("--user-data-dir=/tmp/chrome_user_data")
-# chrome_options.add_argument("--disable-blink-features=AutomationControlled") 
-# chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
  
 driver = webdriver.Chrome(options=chrome_options)
 
@@ -32,8 +29,6 @@ try:
 except TimeoutException:
     print("No accept cookies button found.")
 
-# WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#qst_11631_24c590b5-a868-4504-9612-6aaa08f75aa2")))
-
 input_field_1 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="qst_11631_24c590b5-a868-4504-9612-6aaa08f75aa2"]')))
 input_field_1.click()
 input_field_1.send_keys("LSO-589")
@@ -42,26 +37,12 @@ input_field_2 = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.X
 input_field_2.click()
 input_field_2.send_keys("200992-248W")
 
-# driver.find_element(By.CSS_SELECTOR, '#qst_11631_24c590b5-a868-4504-9612-6aaa08f75aa2').send_keys("LSO-589")
-# driver.find_element(By.CSS_SELECTOR, '#qst_11630_9941162d-0136-4489-b0ab-adecca269141').send_keys("200992-248W")#random data found online
-
-submit_button = WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="entryFormSubmit"]')))
+submit_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="entryFormSubmit"]')))
 submit_button.click()
-
-# WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'iframe')))
-# driver.switch_to.frame(driver.find_element(By.TAG_NAME, 'iframe'))
-
-# try:
-   # recaptcha = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'recaptcha-anchor')))
-   # recaptcha.click()
-# except TimeoutException:
-   #  print("No reCAPTCHA element found or not clickable.")
-
-# driver.switch_to.default_content()
 
 try:
     # Locate the reCAPTCHA iframe by title
-    recaptcha_iframe = WebDriverWait(driver, 20).until(
+    recaptcha_iframe = WebDriverWait(driver, 15).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[title='reCAPTCHA']"))
     )
 
@@ -69,7 +50,7 @@ try:
     driver.switch_to.frame(recaptcha_iframe)
 
     # Locate and click the reCAPTCHA checkbox
-    recaptcha_checkbox = WebDriverWait(driver, 20).until(
+    recaptcha_checkbox = WebDriverWait(driver, 15).until(
         EC.element_to_be_clickable((By.ID, "recaptcha-anchor"))
     )
     recaptcha_checkbox.click()
@@ -82,19 +63,18 @@ try:
 except TimeoutException:
     print("reCAPTCHA not found or clickable.")
 
-# time.sleep(50)
+try:
+    submit_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="entryFormSubmit"]')))
+    submit_button.click()   
+except TimeoutException:
+    print("It is not needed to click the Submit button again.")
 
-element_on_next_page = WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl07_ucProcess_ucTopQuestions_qst_12535"]')))
+element_on_next_page = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl07_ucProcess_ucTopQuestions_qst_12535"]')))
 element_on_next_page.click()
 element_on_next_page.send_keys("I don't have an adress")
+
+time.sleep(2)
 
 driver.execute_script("window.scrollTo(0, document.body.scrollTop);")
 
 time.sleep(5)
-
-# driver.find_element(By.ID, 'entryFormSubmit').click() #after this is submitted, form ether goes to step2 or shows up captcha
-# driver.find_element(By.CSS_SELECTOR, '.DependentTrigger_19838').click()#this does not work if captcha is not solved
-
-# //*[@id="recaptcha-anchor"]/div[1]
-# //*[@id="recaptcha-anchor"]
-# //*[@id="rc-anchor-container"]/div[3]/div[1]/div/div
