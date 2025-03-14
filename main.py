@@ -8,7 +8,7 @@ from twocaptcha import TwoCaptcha
 from bs4 import BeautifulSoup
 
 # 2Captcha API Key
-API_KEY = "6eac18b9d70d016d0dcdaf58772e934b"
+API_KEY = "YOUR API KEY"
 
 # Site details
 SITE_KEY = "6LeyeaIdAAAAAJ8dQECv_rT21tnllZ7iow927wYm"
