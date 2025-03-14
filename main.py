@@ -6,10 +6,12 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
 from twocaptcha import TwoCaptcha
+from bs4 import BeautifulSoup
 
 # 2Captcha API Key
-API_KEY = "ENTER YOU API KEY HERE"
+API_KEY = "YOUR API KEY"
 
 # Site details
 SITE_KEY = "6LeyeaIdAAAAAJ8dQECv_rT21tnllZ7iow927wYm"
@@ -93,6 +95,67 @@ def fill_form(driver):
     time.sleep(5)
 
 
+def select_dropdown_option(driver, dropdown_id, option_text):
+    """Opens a Select2 dropdown and selects an option based on visible text."""
+
+    # Click on the visible dropdown to open it
+    dropdown = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, f'//span[@aria-labelledby="select2-{dropdown_id}-container"]'))
+    )
+    dropdown.click()
+    time.sleep(1)  # Wait briefly for options to load
+
+    # Find and click the option using its text
+    option = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, f'//li[contains(text(), "{option_text}")]'))
+    )
+
+    # Scroll into view (sometimes necessary)
+    driver.execute_script("arguments[0].scrollIntoView(true);", option)
+
+    # Click the option
+    option.click()
+
+
+def second_form(driver):
+    """Fills the second form with dropdown selections and text inputs."""
+
+    # Click radio buttons
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl07_ucProcess_ucTopQuestions_qst_19836"]/span[2]/label'))
+    ).click()
+
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl07_ucProcess_ucTopQuestions_qst_15383"]/span[2]/label'))
+    ).click()
+
+    # Select an option from the dropdown (10,000 km)
+    select_dropdown_option(driver, "ctl07_ucProcess_ucTopQuestions_qst_15370", "10 000 km")
+
+    # Fill text inputs
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl07_ucProcess_ucTopQuestions_qst_12535"]'))
+    ).send_keys("Kalastajatorpantie 1")
+
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl07_ucProcess_ucTopQuestions_qst_11634"]'))
+    ).send_keys("00330")
+
+    # Submit form
+    WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl07_ucProcess_ucTopQuestions_btnMiddleStepPrice"]'))
+    ).click()
+
+    # Extract results
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'MotorBonusBanner__bonusBox___1GCtJ'))
+    )
+
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+    details = soup.find("div", class_="MotorBonusBanner__bonusBox___1GCtJ")
+
+    print(details.getText() if details else "Details not found.")
+
 def main():
     driver = setup_driver()
 
@@ -100,6 +163,7 @@ def main():
         fill_form(driver)
         solve_captcha(driver, SITE_KEY, PAGE_URL)
         print("Process completed successfully!")
+        second_form(driver)
     except Exception as e:
         print(f"Error occurred: {e}")
     finally:
