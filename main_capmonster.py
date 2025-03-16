@@ -1,5 +1,6 @@
 import time
 import asyncio
+import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,8 +14,53 @@ API_KEY = "YOUR CAPMONSTER API KEY"
 WEBSITE_URL = "https://www.if.fi/henkiloasiakkaat/vakuutukset/autovakuutus"
 WEBSITE_KEY = "6LeyeaIdAAAAAJ8dQECv_rT21tnllZ7iow927wYm"
 
+# Proxy credentials
+USERNAME = "YOUR USERNAME"
+PASSWORD = "YOUR PASSWORD"
+PROXY_DNS = "YOUR PROXY DNS"
+
 client_options = ClientOptions(api_key=API_KEY)
 cap_monster_client = CapMonsterClient(options=client_options)
+
+def get_proxy():
+    """ 
+    Fetches a new proxy dynamically using provided credentials. 
+    Returns a dictionary containing HTTP and HTTPS proxy settings.
+    """
+    proxy_url = f"http://{USERNAME}:{PASSWORD}@{PROXY_DNS}"
+    return {"http": proxy_url, "https": proxy_url}
+
+def check_ip():
+    """ 
+    Checks and prints the current IP address to verify if the proxy is working.
+    """
+    proxy = get_proxy()
+    try:
+        response = requests.get("http://ip-api.com/json", proxies=proxy, timeout=10)
+        ip_data = response.json()
+        print(f"Current Proxy IP: {ip_data.get('query', 'Unknown')} ({ip_data.get('country', 'Unknown')})")
+    except requests.exceptions.RequestException:
+        print("Failed to fetch IP address. Proxy might be blocked!")
+
+def setup_driver():
+    """ 
+    Initializes and configures the Selenium WebDriver with proxy settings and necessary options. 
+    Returns the WebDriver instance.
+    """
+    print("Setting up the WebDriver...")
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    )
+    chrome_options.add_argument(f"--proxy-pac-url=data:text/javascript,{{'FindProxyForURL': function(url, host) {{ return 'PROXY {PROXY_DNS}'; }}}}")
+
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.maximize_window()
+    print("WebDriver initialized.")
+    return driver
 
 def solve_captcha(driver, site_key, page_url, retries=3, wait_time=10):
     print("Checking for reCAPTCHA...")
@@ -56,22 +102,7 @@ def solve_captcha(driver, site_key, page_url, retries=3, wait_time=10):
         print(f"Error occurred while solving CAPTCHA: {e}")
         return False
 
-def setup_driver():
-    print("Setting up the WebDriver...")
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.maximize_window()
-    print("WebDriver initialized.")
-    return driver
-
-
-def fill_form(driver):
+def first_form(driver):
     print("Navigating to the form page...")
     driver.get(WEBSITE_URL)
 
@@ -165,22 +196,20 @@ def second_form(driver):
 
 
 def main():
+    """ 
+    Main function to execute the automated process: checking IP, setting up the driver, filling forms, solving CAPTCHA, and extracting details.
+    """
     print("Starting the automation process...")
+
+    check_ip()
     driver = setup_driver()
 
     try:
-        fill_form(driver)
-        if solve_captcha(driver, WEBSITE_KEY, WEBSITE_URL):
-            print("Moving to the second form...")
-            second_form(driver)
-            print("Process completed successfully!")
-        else:
-            print("CAPTCHA solving failed, stopping the process.")
-    except Exception as e:
-        print(f"Error occurred: {e}")
+        first_form(driver)
+        solve_captcha(driver, WEBSITE_KEY, WEBSITE_URL)
+        second_form(driver)
+        print("Process completed successfully!")
     finally:
-        print("Closing the WebDriver...")
-        time.sleep(10)
         driver.quit()
         print("WebDriver closed.")
 
