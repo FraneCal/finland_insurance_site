@@ -33,7 +33,7 @@ def solve_captcha(driver, site_key, page_url, retries=3, wait_time=10):
                 # Run the async function properly
                 result = asyncio.run(cap_monster_client.solve_captcha(recaptcha_request))
                 captcha_code = result['gRecaptchaResponse']
-                print(f"CAPTCHA solved: {captcha_code}")
+                # print(f"CAPTCHA solved: {captcha_code}")
 
                 # Inject the CAPTCHA response into the form
                 driver.execute_script(
@@ -61,7 +61,7 @@ def setup_driver():
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument(
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
