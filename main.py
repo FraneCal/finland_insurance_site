@@ -14,23 +14,56 @@ API_KEY = "YOUR API KEY"
 SITE_KEY = "6LeyeaIdAAAAAJ8dQECv_rT21tnllZ7iow927wYm"
 PAGE_URL = "https://www.if.fi/henkiloasiakkaat/vakuutukset/autovakuutus"
 
+# Proxy credentials
+USERNAME = "YOUR USERNAME"
+PASSWORD = "YOUR PASSWORD"
+PROXY_DNS = "YOUR PROXY DNS"
+
+def get_proxy():
+    """ 
+    Fetches a new proxy dynamically using provided credentials. 
+    Returns a dictionary containing HTTP and HTTPS proxy settings.
+    """
+    proxy_url = f"http://{USERNAME}:{PASSWORD}@{PROXY_DNS}"
+    return {"http": proxy_url, "https": proxy_url}
+
+def check_ip():
+    """ 
+    Checks and prints the current IP address to verify if the proxy is working.
+    """
+    proxy = get_proxy()
+    try:
+        response = requests.get("http://ip-api.com/json", proxies=proxy, timeout=10)
+        ip_data = response.json()
+        print(f"Current Proxy IP: {ip_data.get('query', 'Unknown')} ({ip_data.get('country', 'Unknown')})")
+    except requests.exceptions.RequestException:
+        print("Failed to fetch IP address. Proxy might be blocked!")
 
 def setup_driver():
+    """ 
+    Initializes and configures the Selenium WebDriver with proxy settings and necessary options. 
+    Returns the WebDriver instance.
+    """
     print("Setting up the WebDriver...")
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--headless=new")
     chrome_options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    )
+    chrome_options.add_argument(f"--proxy-pac-url=data:text/javascript,{{'FindProxyForURL': function(url, host) {{ return 'PROXY {PROXY_DNS}'; }}}}")
 
     driver = webdriver.Chrome(options=chrome_options)
     driver.maximize_window()
     print("WebDriver initialized.")
     return driver
 
-
 def solve_captcha(driver, site_key, page_url):
+    """ 
+    Detects and solves a reCAPTCHA challenge using the 2Captcha API. 
+    Injects the solution into the page and submits the form.
+    """
     print("Checking for reCAPTCHA...")
     try:
         recaptcha_iframe = WebDriverWait(driver, 5).until(
@@ -57,8 +90,11 @@ def solve_captcha(driver, site_key, page_url):
     except:
         print("No reCAPTCHA found. Proceeding without solving.")
 
-
-def fill_form(driver):
+def first_form(driver):
+    """ 
+    Navigates to the form page, accepts cookies if needed, and fills in required fields. 
+    Submits the form after entering details.
+    """
     print("Navigating to the form page...")
     driver.get(PAGE_URL)
 
@@ -92,9 +128,10 @@ def fill_form(driver):
     print("Form submitted.")
     time.sleep(5)
 
-
 def select_dropdown_option(driver, dropdown_id, option_text):
-    """Opens a Select2 dropdown and selects an option based on visible text."""
+    """ 
+    Opens a Select2 dropdown and selects an option based on visible text.
+    """
     print(f"Selecting option '{option_text}' from dropdown '{dropdown_id}'...")
     dropdown = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, f'//span[@aria-labelledby="select2-{dropdown_id}-container"]'))
@@ -109,8 +146,11 @@ def select_dropdown_option(driver, dropdown_id, option_text):
     option.click()
     print(f"Option '{option_text}' selected.")
 
-
 def second_form(driver):
+    """ 
+    Fills out the second form by selecting radio buttons, dropdown values, and entering text. 
+    Extracts and prints details from the final page.
+    """
     print("Filling the second form...")
 
     WebDriverWait(driver, 10).until(
@@ -150,25 +190,23 @@ def second_form(driver):
 
     print(details.getText() if details else "Details not found.")
 
-
 def main():
+    """ 
+    Main function to execute the automated process: checking IP, setting up the driver, filling forms, solving CAPTCHA, and extracting details.
+    """
     print("Starting the automation process...")
+
+    check_ip()
     driver = setup_driver()
 
     try:
-        fill_form(driver)
+        first_form(driver)
         solve_captcha(driver, SITE_KEY, PAGE_URL)
-        print("Moving to the second form...")
         second_form(driver)
         print("Process completed successfully!")
-    except Exception as e:
-        print(f"Error occurred: {e}")
     finally:
-        print("Closing the WebDriver...")
-        time.sleep(10)
         driver.quit()
         print("WebDriver closed.")
-
 
 if __name__ == "__main__":
     main()
