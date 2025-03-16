@@ -20,37 +20,37 @@ def solve_captcha(driver, site_key, page_url, retries=3, wait_time=10):
     print("Checking for reCAPTCHA...")
     try:
         # Wait for the reCAPTCHA iframe and check if it exists
-        recaptcha_iframe = WebDriverWait(driver, wait_time).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[title='reCAPTCHA']"))
-        )
-
-        if recaptcha_iframe:  # Only proceed if reCAPTCHA is found
-            print("reCAPTCHA detected. Solving...")
-
-            # Create CAPTCHA solving request
-            recaptcha_request = RecaptchaV2ProxylessRequest(websiteUrl=page_url, websiteKey=site_key)
-
-            # Run the async function properly
-            result = asyncio.run(cap_monster_client.solve_captcha(recaptcha_request))
-            captcha_code = result['gRecaptchaResponse']
-            print(f"CAPTCHA solved: {captcha_code}")
-
-            # Inject the CAPTCHA response into the form
-            driver.execute_script(
-                "document.getElementById('g-recaptcha-response').innerHTML = arguments[0];",
-                captcha_code
+        try:
+            recaptcha_iframe = WebDriverWait(driver, wait_time).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[title='reCAPTCHA']"))
             )
-            print("CAPTCHA solved, injecting response.")
+            if recaptcha_iframe:  # Only proceed if reCAPTCHA is found
+                print("reCAPTCHA detected. Solving...")
 
-            submit_button = WebDriverWait(driver, wait_time).until(
-                EC.element_to_be_clickable((By.XPATH, '//*[@id="entryFormSubmit"]'))
-            )
-            submit_button.click()
-            print("Form submitted successfully after solving CAPTCHA!")
-            return True
-        else:
+                # Create CAPTCHA solving request
+                recaptcha_request = RecaptchaV2ProxylessRequest(websiteUrl=page_url, websiteKey=site_key)
+
+                # Run the async function properly
+                result = asyncio.run(cap_monster_client.solve_captcha(recaptcha_request))
+                captcha_code = result['gRecaptchaResponse']
+                print(f"CAPTCHA solved: {captcha_code}")
+
+                # Inject the CAPTCHA response into the form
+                driver.execute_script(
+                    "document.getElementById('g-recaptcha-response').innerHTML = arguments[0];",
+                    captcha_code
+                )
+                print("CAPTCHA solved, injecting response.")
+
+                submit_button = WebDriverWait(driver, wait_time).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="entryFormSubmit"]'))
+                )
+                submit_button.click()
+                print("Form submitted successfully after solving CAPTCHA!")
+                return True
+        except Exception as e:
             print("No CAPTCHA found, proceeding without solving.")
-            return True  # If no CAPTCHA is found, return True as we don't need to solve it.
+            return True  # If no CAPTCHA is found, return True since we don't need to solve it.
 
     except Exception as e:
         print(f"Error occurred while solving CAPTCHA: {e}")
