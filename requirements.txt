@@ -1,3 +1,7 @@
+# To install, run the following command in terminal:
+
+# pip install -r requirements.txt
+
 selenium
 requests
 2captcha-python
