@@ -1,0 +1,4 @@
+selenium
+requests
+twocaptcha
+beautifulsoup4
