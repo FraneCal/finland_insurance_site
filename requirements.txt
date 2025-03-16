@@ -1,4 +1,4 @@
 selenium
 requests
-twocaptcha
-beautifulsoup4
+2captcha-python
+bs4
