@@ -6,3 +6,4 @@ selenium
 requests
 2captcha-python
 bs4
+capmonstercloudclient
