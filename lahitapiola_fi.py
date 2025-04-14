@@ -29,6 +29,7 @@ def lahitapiola(headless_scrapper, pause_scrapper_at_the_end, requestID, annual_
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
     chrome_options.add_argument("--incognito")
     if headless_scrapper == "true":
+    # chrome_options.add_argument("--headless")  # Run without GUI
     # chrome_options.add_argument("--headless=new")
         pass
     else:
@@ -67,21 +68,22 @@ def lahitapiola(headless_scrapper, pause_scrapper_at_the_end, requestID, annual_
         ssn_input.click()
         driver.execute_script("arguments[0].value = arguments[1];", ssn_input, personal_id)
 
-        # Wait until the shadow host is present
-        shadow_host = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '#choose-vehicle-search-button'))
-        )
-        # Access the shadow root
-        shadow_root = driver.execute_script("return arguments[0].shadowRoot", shadow_host)
-        # Try to find the button inside the shadow DOM
-        button_inside_shadow = shadow_root.find_element(By.CSS_SELECTOR,
-                                                        'button.duet-button.duet-button-size-medium.primary.medium')
-        # Print outer HTML to verify it's the right element
-        print(driver.execute_script("return arguments[0].outerHTML;", button_inside_shadow))
-        # Or print its text (if there is any visible text)
-        print("Button text:", button_inside_shadow.text)
 
-        button_inside_shadow.click()
+        shadow_host = driver.find_element(By.CSS_SELECTOR, '#choose-vehicle-search-button')
+        shadow_root = driver.execute_script("return arguments[0].shadowRoot", shadow_host)
+
+        print(shadow_root)
+
+        button_inside_shadow = shadow_root.find_element(By.CSS_SELECTOR, 'button')
+
+        # <button class="duet-button duet-button-size-medium primary medium" type="button" aria-haspopup="false"><span class="duet-button-contents"><span class="duet-button-contents-slot"><slot></slot></span></span></button>
+
+        print(button_inside_shadow)
+
+        # button_inside_shadow.click()
+
+
+
         time.sleep(10000)
 
         driver.find_element(By.CSS_SELECTOR,
@@ -208,17 +210,7 @@ def lahitapiola(headless_scrapper, pause_scrapper_at_the_end, requestID, annual_
     finally:
         driver.quit()
 
-result = lahitapiola(
-    headless_scrapper=["headless_scrapper"],
-    pause_scrapper_at_the_end=["scraper_pause_at_the_end"],
-    requestID=["requestID"],
-    annual_mileage=["annual_mileage"],
-    financed=["financed"],
-    financing_company=["financing_company"],
-    insurance_start_date=["insurance_start_date"],
-    municipality=["municipality"],
-    personal_id=["personal_id"],
-    postal_code=["postal_code"],
-    registration_number=["registration_number"],
-    under_24=["under_24"]
-)
+lahitapiola(True,False,"whatever","5000","yes","","2024-02-01","","200992-248W","00100","LSO-589","true")
+
+
+# if_fi_scraping(True,False,"whatever","5000","yes","","2024-02-01","","200992-248W","00100","LSO-589","true")
